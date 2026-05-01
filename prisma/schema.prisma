@@ -12,59 +12,37 @@ datasource db {
   provider = "postgresql"
 }
 
-// model Profile{
-//   id String @id @default(uuid())
-//   name String
-//   email String @unique 
-//   profile_picture String?
-//   role String @default("USER")
-//   created_at DateTime @default(now())
-//   user    User   @relation(fields: [userId], references: [id])
-//   userId String @unique
-//   updated_at DateTime @updatedAt
-
-// }
-
-// model User { 
-//   id    String     @id @default(uuid()) 
-//   email String  @unique
-//   name  String?
-//   user_profile Profile?
-//   profileId String
-//   posts Post[]
-// } 
-model Post { 
-  id        String     @id @default(uuid()) 
-  title     String
-  content   String?
-  published Boolean @default(false) 
-  tumbnail String?
-  isFeatured Boolean @default(false)
-  status PostStatus @default(DRAFT)
-  tags String[]
-  views Int @default(0)
+model Post {
+  id         String     @id @default(uuid())
+  title      String
+  content    String?
+  published  Boolean    @default(false)
+  tumbnail   String?
+  isFeatured Boolean    @default(false)
+  status     PostStatus @default(DRAFT)
+  tags       String[]
+  views      Int        @default(0)
   // author    User    @relation(fields: [authorId], references: [id]) 
-  authorId  String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  comments Comment[]
-} 
-
-model Comment {
-  id String @id @default(uuid())
-  content String
-  post Post @relation(fields: [postId], references: [id])
-  postId String
-  // author User @relation(fields: [authorId], references: [id])
-  authorId String
-  parent Comment? @relation("CommentReplies", fields: [parentId], references: [id])
-  replies Comment[] @relation("CommentReplies")
-  parentId String? 
-  status CommentStatus @default(PENDING)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  authorId   String
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  comments   Comment[]
 }
 
+model Comment {
+  id         String        @id @default(uuid())
+  content    String
+  post       Post          @relation(fields: [postId], references: [id])
+  postId     String
+  // author User @relation(fields: [authorId], references: [id])
+  authorId   String
+  parent     Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies    Comment[]     @relation("CommentReplies")
+  parentId   String?
+  status     CommentStatus @default(PENDING)
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+}
 
 enum Role {
   USER
@@ -76,8 +54,75 @@ enum PostStatus {
   PUBLISHED
   ARCHIVED
 }
+
 enum CommentStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          String?
+  phone         String?
+  status        String?
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
