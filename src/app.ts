@@ -1,21 +1,28 @@
-import { toNodeHandler } from 'better-auth/node';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import express, { type Request, type Response } from 'express';
-import { postRouter } from './module/post/post.route';
-import { auth } from './utils/auth';
+import { toNodeHandler } from "better-auth/node";
+import cros from "cors";
+import express from "express";
 
-dotenv.config();
+import { auth } from "./utils/auth";
+import { postRouter } from "./module/post/post.route";
 const app = express();
-app.use(cors());
+app.use(
+  cros({
+    origin: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    credentials: true,
+  }),
+);
+app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
-app.all('/api/auth/*splat', toNodeHandler(auth));
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World');
-  console.log('hello word ');
+// post routes
+app.use("/api/post", postRouter)
+
+
+// inital root route
+app.use("/", (req, res) => {
+  res.send("Hello World ");
 });
 
-app.use('/post', postRouter);
+
 
 export default app;

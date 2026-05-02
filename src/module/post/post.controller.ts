@@ -45,8 +45,6 @@ const getAllPosts = async (req: Request, res: Response) => {
 const getSinglePost = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    console.log(id, '========');
-
     const post = await postService.singlePostService(id);
 
     if (!post) {

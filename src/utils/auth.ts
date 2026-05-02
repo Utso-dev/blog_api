@@ -1,51 +1,49 @@
-import { betterAuth } from 'better-auth';
-import { prismaAdapter } from 'better-auth/adapters/prisma';
-// If your Prisma file is located elsewhere, you can change the path
-import nodemailer from 'nodemailer';
-import { prisma } from '../../lib/prisma';
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import nodemailer from "nodemailer";
+import { prisma } from "../../lib/prisma";
+
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
-  secure: false, 
+  secure: false, // use STARTTLS (upgrade connection to TLS after connecting)
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
 
-
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
-    provider: 'postgresql', 
+    provider: "postgresql",
   }),
-  
-  trustedOrigins: [process.env.BETTER_AUTH_URL, 'http://localhost:3000'],
-  user:{
-    additionalFields:{
-      role:{
-        type:'string',
-        default:'USER',
-        required:false,
+  trustedOrigins: [process.env.BETTER_AUTH_URL! || "http://localhost:3000"],
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "USER",
       },
-        phone:{
-          type:'string',
-          required:false,
-          default:null,
-        },
-        status:{
-          type:'string',
-          default:'ACTIVE',
-          required:false,
-        }
-    }
+      phone: {
+        type: "string",
+        required: false,
+        defaultValue: null,
+      },
+      status: {
+        type: "string",
+        required: false,
+        defaultValue: "ACTIVE",
+      },
+    },
   },
-   emailAndPassword: { 
-    enabled: true, 
+  emailAndPassword: {
+    enabled: true,
   },
-  emailVerification:{
-    sendOnSignIn:true,
-    autoSignInAfterVerification:true,
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       try {
         const info = await transporter.sendMail({
@@ -69,7 +67,13 @@ export const auth = betterAuth({
         console.error("Error sending verification email:", error);
       }
     },
-  
-  }
-  
+  },
+  socialProviders: {
+    google: {
+      prompt: "select_account consent",
+      accessType: "offline",
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
 });
